@@ -2,6 +2,7 @@ import { IncomingMessage, OutgoingHttpHeaders, RequestOptions } from "http";
 import * as path from "path";
 import { performance } from "perf_hooks";
 
+import { getProxyUrl } from "@actions/http-client/lib/proxy";
 import * as toolcache from "@actions/tool-cache";
 import { https } from "follow-redirects";
 import { v4 as uuidV4 } from "uuid";
@@ -185,6 +186,13 @@ async function downloadAndExtractZstdWithStreaming(
   tarVersion: tar.TarVersion,
   logger: Logger,
 ): Promise<string> {
+  // Attempt to detect a proxy URL that should be used for the download.
+  let downloadUrl = codeqlURL;
+  const proxyUrl = adjustUrlByProxy(codeqlURL);
+  if (proxyUrl) {
+    downloadUrl = proxyUrl;
+  }
+
   headers = Object.assign(
     { "User-Agent": "CodeQL Action" },
     authorization ? { authorization } : {},
@@ -192,7 +200,7 @@ async function downloadAndExtractZstdWithStreaming(
   );
   const response = await new Promise<IncomingMessage>((resolve) =>
     https.get(
-      codeqlURL,
+      downloadUrl,
       {
         headers,
         highWaterMark: STREAMING_HIGH_WATERMARK_BYTES,
@@ -216,4 +224,9 @@ function sanitizeUrlForStatusReport(url: string): string {
   )
     ? url
     : "sanitized-value";
+}
+
+function adjustUrlByProxy(url: string): string | undefined {
+  const proxyUrl = getProxyUrl(new URL(url));
+  return proxyUrl ? proxyUrl.toString() : undefined;
 }
