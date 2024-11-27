@@ -12,7 +12,7 @@ import * as api from "./api-client";
 import * as defaults from "./defaults.json";
 import {
   CODEQL_VERSION_ZSTD_BUNDLE,
-  CodeQLDefaultVersionInfo
+  CodeQLDefaultVersionInfo,
 } from "./feature-flags";
 import { formatDuration, Logger } from "./logging";
 import * as tar from "./tar";

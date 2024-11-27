@@ -2,6 +2,7 @@ import { IncomingMessage, OutgoingHttpHeaders, RequestOptions } from "http";
 import * as path from "path";
 import { performance } from "perf_hooks";
 
+import * as core from "@actions/core";
 import { getProxyUrl } from "@actions/http-client/lib/proxy";
 import * as toolcache from "@actions/tool-cache";
 import { https } from "follow-redirects";
@@ -9,7 +10,7 @@ import { v4 as uuidV4 } from "uuid";
 
 import { formatDuration, Logger } from "./logging";
 import * as tar from "./tar";
-import { cleanUpGlob } from "./util";
+import { cleanUpGlob, getErrorMessage } from "./util";
 
 /**
  * High watermark to use when streaming the download and extraction of the CodeQL tools.
@@ -88,37 +89,42 @@ export async function downloadAndExtract(
 
   const compressionMethod = tar.inferCompressionMethod(codeqlURL);
 
-  // TODO: Re-enable streaming when we have a more reliable way to respect proxy settings.
+  try {
+    if (compressionMethod === "zstd" && process.platform === "linux") {
+      logger.info(`Streaming the extraction of the CodeQL bundle.`);
 
-  if (compressionMethod === "zstd" && process.platform === "linux") {
-    logger.info(`Streaming the extraction of the CodeQL bundle.`);
+      const toolsInstallStart = performance.now();
+      const extractedBundlePath = await downloadAndExtractZstdWithStreaming(
+        codeqlURL,
+        authorization,
+        headers,
+        tarVersion!,
+        logger,
+      );
 
-    const toolsInstallStart = performance.now();
-    const extractedBundlePath = await downloadAndExtractZstdWithStreaming(
-      codeqlURL,
-      authorization,
-      headers,
-      tarVersion!,
-      logger,
+      const combinedDurationMs = Math.round(
+        performance.now() - toolsInstallStart,
+      );
+      logger.info(
+        `Finished downloading and extracting CodeQL bundle to ${extractedBundlePath} (${formatDuration(
+          combinedDurationMs,
+        )}).`,
+      );
+
+      return {
+        extractedBundlePath,
+        statusReport: {
+          compressionMethod,
+          toolsUrl: sanitizeUrlForStatusReport(codeqlURL),
+          ...makeStreamedToolsDownloadDurations(combinedDurationMs),
+        },
+      };
+    }
+  } catch (e) {
+    core.warning(
+      `Failed to download and extract CodeQL bundle using streaming. Falling back to downloading the bundle before extracting.`,
     );
-
-    const combinedDurationMs = Math.round(
-      performance.now() - toolsInstallStart,
-    );
-    logger.info(
-      `Finished downloading and extracting CodeQL bundle to ${extractedBundlePath} (${formatDuration(
-        combinedDurationMs,
-      )}).`,
-    );
-
-    return {
-      extractedBundlePath,
-      statusReport: {
-        compressionMethod,
-        toolsUrl: sanitizeUrlForStatusReport(codeqlURL),
-        ...makeStreamedToolsDownloadDurations(combinedDurationMs),
-      },
-    };
+    core.warning(getErrorMessage(e));
   }
 
   const dest = path.join(tempDir, uuidV4());
