@@ -187,11 +187,7 @@ async function downloadAndExtractZstdWithStreaming(
   logger: Logger,
 ): Promise<string> {
   // Attempt to detect a proxy URL that should be used for the download.
-  let downloadUrl = codeqlURL;
-  const proxyUrl = adjustUrlByProxy(codeqlURL);
-  if (proxyUrl) {
-    downloadUrl = proxyUrl;
-  }
+  const downloadUrl = adjustUrlByProxy(codeqlURL) || codeqlURL;
 
   headers = Object.assign(
     { "User-Agent": "CodeQL Action" },
@@ -226,6 +222,7 @@ function sanitizeUrlForStatusReport(url: string): string {
     : "sanitized-value";
 }
 
+// Auxiliary function to retrieve the proxy URL to use for a given URL, if proxy settings are configured.
 function adjustUrlByProxy(url: string): string | undefined {
   const proxyUrl = getProxyUrl(new URL(url));
   return proxyUrl ? proxyUrl.toString() : undefined;
