@@ -12,8 +12,7 @@ import * as api from "./api-client";
 import * as defaults from "./defaults.json";
 import {
   CODEQL_VERSION_ZSTD_BUNDLE,
-  CodeQLDefaultVersionInfo,
-  FeatureEnablement,
+  CodeQLDefaultVersionInfo
 } from "./feature-flags";
 import { formatDuration, Logger } from "./logging";
 import * as tar from "./tar";
@@ -505,7 +504,6 @@ export const downloadCodeQL = async function (
   apiDetails: api.GitHubApiDetails,
   tarVersion: tar.TarVersion | undefined,
   tempDir: string,
-  features: FeatureEnablement,
   logger: Logger,
 ): Promise<{
   codeqlFolder: string;
@@ -540,7 +538,6 @@ export const downloadCodeQL = async function (
     { "User-Agent": "CodeQL Action", ...headers },
     tarVersion,
     tempDir,
-    features,
     logger,
   );
 
@@ -649,7 +646,6 @@ export async function setupCodeQLBundle(
   apiDetails: api.GitHubApiDetails,
   tempDir: string,
   variant: util.GitHubVariant,
-  features: FeatureEnablement,
   defaultCliVersion: CodeQLDefaultVersionInfo,
   logger: Logger,
 ) {
@@ -700,7 +696,6 @@ export async function setupCodeQLBundle(
         apiDetails,
         zstdAvailability.version,
         tempDir,
-        features,
         logger,
       );
       toolsVersion = result.toolsVersion;
