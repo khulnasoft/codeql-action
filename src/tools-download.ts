@@ -3,7 +3,7 @@ import * as path from "path";
 import { performance } from "perf_hooks";
 
 import * as core from "@actions/core";
-import { getProxyUrl } from "@actions/http-client/lib/proxy";
+import { HttpClient } from "@actions/http-client";
 import * as toolcache from "@actions/tool-cache";
 import { https } from "follow-redirects";
 import { v4 as uuidV4 } from "uuid";
@@ -186,8 +186,8 @@ async function downloadAndExtractZstdWithStreaming(
   tarVersion: tar.TarVersion,
   logger: Logger,
 ): Promise<string> {
-  // Attempt to detect a proxy URL that should be used for the download.
-  const downloadUrl = adjustUrlByProxy(codeqlURL) || codeqlURL;
+  // Get Agent to use (respects proxy settings).
+  const agent = new HttpClient().getAgent(codeqlURL);
 
   headers = Object.assign(
     { "User-Agent": "CodeQL Action" },
@@ -196,10 +196,11 @@ async function downloadAndExtractZstdWithStreaming(
   );
   const response = await new Promise<IncomingMessage>((resolve) =>
     https.get(
-      downloadUrl,
+      codeqlURL,
       {
         headers,
         highWaterMark: STREAMING_HIGH_WATERMARK_BYTES,
+        agent,
       } as unknown as RequestOptions,
       (r) => resolve(r),
     ),
@@ -220,10 +221,4 @@ function sanitizeUrlForStatusReport(url: string): string {
   )
     ? url
     : "sanitized-value";
-}
-
-// Auxiliary function to retrieve the proxy URL to use for a given URL, if proxy settings are configured.
-function adjustUrlByProxy(url: string): string | undefined {
-  const proxyUrl = getProxyUrl(new URL(url));
-  return proxyUrl ? proxyUrl.toString() : undefined;
 }
