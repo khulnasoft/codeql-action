@@ -51,7 +51,7 @@ jobs:
       - name: Set up GitHub CLI
         run: |
           apt update
-          apt install -y curl
+          apt install -y curl readline gnupg2
           curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
           apt-key add /usr/share/keyrings/githubcli-archive-keyring.gpg
           apt-add-repository https://cli.github.com/packages
