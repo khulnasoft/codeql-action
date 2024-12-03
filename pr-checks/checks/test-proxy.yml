@@ -1,6 +1,6 @@
 name: "Proxy test"
 description: "Tests using a proxy specified by the https_proxy environment variable"
-versions: ["linked", "https://github.com/github/codeql-action/releases/download/codeql-bundle-v2.19.4/codeql-bundle-linux64.tar.zst"]
+versions: ["linked", "nightly-latest"]
 operatingSystems: ["ubuntu"]
 container:
   image: ubuntu:22.04
