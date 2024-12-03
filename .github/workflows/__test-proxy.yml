@@ -30,7 +30,7 @@ jobs:
           - os: ubuntu-latest
             version: linked
           - os: ubuntu-latest
-            version: nightly-latest
+            version: stable
     name: Proxy test
     permissions:
       contents: read
