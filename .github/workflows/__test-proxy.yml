@@ -45,6 +45,9 @@ jobs:
           python-version: '3.11'
       - name: Check out repository
         uses: actions/checkout@v4
+        env:
+          https_proxy: http://squid-proxy:3128
+          CODEQL_ACTION_TEST_MODE: true
       - name: Set up GitHub CLI
         run: |
           apt install curl
