@@ -63,9 +63,6 @@ jobs:
     container:
       image: ubuntu:22.04
       options: --dns 127.0.0.1
-      run: |
-        apt-get update
-        apt-get install -y gh
     services:
       squid-proxy:
         image: ubuntu/squid:latest
