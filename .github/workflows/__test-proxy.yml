@@ -50,11 +50,11 @@ jobs:
           CODEQL_ACTION_TEST_MODE: true
       - name: Set up GitHub CLI
         run: |
+          apt update
           apt install curl
           curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
           apt-key add /usr/share/keyrings/githubcli-archive-keyring.gpg
           apt-add-repository https://cli.github.com/packages
-          apt update
           apt install gh
       - name: Prepare test
         id: prepare-test
